@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Second Look</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <!-- 1. Start screen -->
+    <section id="screen-start" class="screen">
+      <h1>Second Look</h1>
+      <p class="lead">Look closely at each picture and decide as a group: is it a real photo, or made by AI?</p>
+      <h2>How to run this</h2>
+      <ol class="tips">
+        <li>Show the picture and give the group a minute to talk it over.</li>
+        <li>Type what the group noticed (optional, no names), then pick Real or AI.</li>
+        <li>Read the reveal and clues out loud before moving on.</li>
+      </ol>
+      <p id="load-error" class="error" hidden>Could not load the pictures. Check that the server is running and refresh.</p>
+      <button id="btn-start" class="btn btn-primary" disabled>Start session</button>
+    </section>
+
+    <!-- 2. Image screen -->
+    <section id="screen-image" class="screen" hidden>
+      <p class="counter" id="counter"></p>
+      <img id="sample-image" class="sample-image" alt="Picture to look at: is it real or AI?">
+      <label for="reason" class="reason-label">What did the group notice?</label>
+      <textarea id="reason" maxlength="200" rows="2" placeholder="Don't type names" autocomplete="off"></textarea>
+      <p class="char-count"><span id="char-count">0</span> / 200</p>
+      <div class="choices">
+        <button class="btn btn-choice btn-real" data-guess="real">Real</button>
+        <button class="btn btn-choice btn-ai" data-guess="ai">AI</button>
+      </div>
+    </section>
+
+    <!-- 3. Reveal screen -->
+    <section id="screen-reveal" class="screen" hidden>
+      <p class="counter" id="reveal-counter"></p>
+      <p class="answer" id="answer"></p>
+      <p class="verdict" id="verdict"></p>
+      <img id="reveal-image" class="sample-image small" alt="">
+      <h2>Clues to look for</h2>
+      <ul id="clue-list" class="clues"></ul>
+      <p class="credit" id="credit"></p>
+      <button id="btn-next" class="btn btn-primary">Next</button>
+    </section>
+
+    <!-- 4. Results screen -->
+    <section id="screen-results" class="screen" hidden>
+      <h1>Nice work!</h1>
+      <p class="score" id="score"></p>
+      <h2>3 clues to remember</h2>
+      <ul id="top-clues" class="clues"></ul>
+
+      <h2>If you saw something like this online, what would you do?</h2>
+      <div class="exit-options">
+        <button class="btn btn-exit" data-choice="share">Share it <span class="count" id="count-share">0</span></button>
+        <button class="btn btn-exit" data-choice="check">Check it first <span class="count" id="count-check">0</span></button>
+        <button class="btn btn-exit" data-choice="adult">Tell a trusted adult <span class="count" id="count-adult">0</span></button>
+      </div>
+      <p class="note">Counts are for this session only. Nothing is saved.</p>
+
+      <p class="safety">If something online makes you uncomfortable, tell a trusted adult.</p>
+      <button id="btn-again" class="btn btn-primary">Play again</button>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

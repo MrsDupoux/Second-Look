@@ -1,0 +1,109 @@
+/* Second Look — Phase 1 styles (projector polish comes in Phase 3) */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  font-size: 22px;
+  line-height: 1.4;
+  background: #f6f4ef;
+  color: #1f2430;
+}
+
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.screen { text-align: center; }
+
+h1 { font-size: 3rem; margin: 0.4em 0; }
+h2 { font-size: 1.4rem; margin: 1.2em 0 0.5em; }
+
+.lead { font-size: 1.3rem; }
+
+.tips {
+  text-align: left;
+  display: inline-block;
+  margin: 0 auto 1.5em;
+}
+.tips li { margin-bottom: 0.4em; }
+
+.btn {
+  font: inherit;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  padding: 0.6em 1.6em;
+  cursor: pointer;
+}
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn:focus-visible { outline: 4px solid #1f2430; outline-offset: 3px; }
+
+.btn-primary { background: #2b59c3; color: #fff; font-size: 1.3rem; margin-top: 1em; }
+
+.counter { font-size: 1.2rem; font-weight: 700; margin: 0 0 0.5em; }
+
+.sample-image {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 55vh;
+  border-radius: 12px;
+  background: #ddd;
+}
+.sample-image.small { max-height: 30vh; margin-bottom: 0.5em; }
+
+.reason-label { display: block; margin-top: 1em; font-weight: 700; }
+
+textarea {
+  font: inherit;
+  width: 100%;
+  max-width: 700px;
+  padding: 0.5em;
+  border: 2px solid #999;
+  border-radius: 10px;
+  resize: none;
+}
+
+.char-count { font-size: 0.9rem; color: #555; margin: 0.2em 0 0.8em; }
+
+.choices { display: flex; gap: 24px; justify-content: center; }
+.btn-choice { font-size: 2rem; min-width: 220px; padding: 0.6em 1em; color: #fff; }
+.btn-real { background: #2e8b57; }
+.btn-ai { background: #8a3ffc; }
+
+.answer { font-size: 3rem; font-weight: 800; margin: 0.2em 0; }
+.answer.real { color: #2e8b57; }
+.answer.ai { color: #8a3ffc; }
+.verdict { font-size: 1.6rem; margin: 0 0 0.6em; }
+
+.clues {
+  text-align: left;
+  display: inline-block;
+  margin: 0 auto;
+  max-width: 800px;
+}
+.clues li { margin-bottom: 0.4em; }
+
+.credit { font-size: 0.8rem; color: #555; margin-top: 1em; }
+
+.score { font-size: 2rem; font-weight: 800; }
+
+.exit-options { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+.btn-exit { background: #fff; border: 3px solid #2b59c3; color: #1f2430; }
+.count {
+  display: inline-block;
+  min-width: 1.8em;
+  margin-left: 0.4em;
+  padding: 0 0.3em;
+  border-radius: 8px;
+  background: #2b59c3;
+  color: #fff;
+}
+
+.note { font-size: 0.9rem; color: #555; }
+.safety { font-weight: 700; margin-top: 1.5em; }
+.error { color: #b00020; font-weight: 700; }

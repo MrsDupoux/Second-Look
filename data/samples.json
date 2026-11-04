@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "image": "images/01.svg",
+    "label": "real",
+    "clues": [
+      "PLACEHOLDER: The shadows all point the same way",
+      "PLACEHOLDER: Small details stay sharp and make sense up close",
+      "PLACEHOLDER: The background looks like a normal, messy real place"
+    ],
+    "credit": "Placeholder image — replace with a public-domain photo and credit its source"
+  },
+  {
+    "id": 2,
+    "image": "images/02.svg",
+    "label": "ai",
+    "clues": [
+      "PLACEHOLDER: The fur blends into the background at the edges",
+      "PLACEHOLDER: The shadow points the wrong way for the light",
+      "PLACEHOLDER: The text on the sign is scrambled"
+    ],
+    "credit": "Placeholder image — made by Second-Look team"
+  },
+  {
+    "id": 3,
+    "image": "images/03.svg",
+    "label": "ai",
+    "clues": [
+      "PLACEHOLDER: The food looks too smooth and shiny, like plastic",
+      "PLACEHOLDER: The fork has an extra prong",
+      "PLACEHOLDER: Patterns on the plate repeat in a strange way"
+    ],
+    "credit": "Placeholder image — made by Second-Look team"
+  }
+]

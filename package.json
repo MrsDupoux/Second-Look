@@ -1,0 +1,16 @@
+{
+  "name": "second-look",
+  "version": "0.1.0",
+  "description": "Real or AI? A group image game for kids, run by an after-school leader.",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
