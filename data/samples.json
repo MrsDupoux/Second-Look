@@ -1,35 +1,112 @@
 [
   {
     "id": 1,
-    "image": "images/01.svg",
+    "image": "images/hippo.jpg",
     "label": "real",
     "clues": [
-      "PLACEHOLDER: The shadows all point the same way",
-      "PLACEHOLDER: Small details stay sharp and make sense up close",
-      "PLACEHOLDER: The background looks like a normal, messy real place"
+      "It has chips, cracks, and worn spots from being thousands of years old",
+      "Three of its legs were repaired by the museum, and real old objects often get fixed",
+      "Surprising isn't the same as fake: a blue hippo statue is a real museum object"
     ],
-    "credit": "Placeholder image — replace with a public-domain photo and credit its source"
+    "credit": "Hippopotamus 'William', Egypt, ca. 1961-1878 B.C. The Metropolitan Museum of Art, Public Domain"
   },
   {
     "id": 2,
-    "image": "images/02.svg",
-    "label": "ai",
+    "image": "images/fruit-bowl.jpg",
+    "label": "real",
     "clues": [
-      "PLACEHOLDER: The fur blends into the background at the edges",
-      "PLACEHOLDER: The shadow points the wrong way for the light",
-      "PLACEHOLDER: The text on the sign is scrambled"
+      "The photographer signed the photo at the bottom",
+      "Each grape, strawberry, and the pineapple has its own natural bumps and shape",
+      "Old-looking isn't proof by itself, because AI can make new pictures look old too"
     ],
-    "credit": "Placeholder image — made by Second-Look team"
+    "credit": "Roger Fenton, 1860. The Metropolitan Museum of Art, Public Domain"
   },
   {
     "id": 3,
-    "image": "images/03.svg",
+    "image": "images/church.png",
     "label": "ai",
     "clues": [
-      "PLACEHOLDER: The food looks too smooth and shiny, like plastic",
-      "PLACEHOLDER: The fork has an extra prong",
-      "PLACEHOLDER: Patterns on the plate repeat in a strange way"
+      "The dark, worn edges look like a filter added on top, not real damage",
+      "Everything is lined up a little too perfectly for a 150-year-old photo",
+      "AI can make a brand-new picture look very old"
     ],
-    "credit": "Placeholder image — made by Second-Look team"
+    "credit": "Made with AI by the Second-Look team"
+  },
+  {
+    "id": 4,
+    "image": "images/bobcat.png",
+    "label": "ai",
+    "clues": [
+      "Everything is perfectly sharp and perfectly lit, like a movie poster",
+      "Real wildlife photos are often a little blurry or caught at an awkward moment",
+      "When a picture looks totally real, ask: where did this come from, and who posted it?"
+    ],
+    "credit": "Made with AI by the Second-Look team"
+  },
+  {
+    "id": 5,
+    "image": "images/skyscraper-ai.png",
+    "label": "ai",
+    "clues": [
+      "The red sign on the top-left building says 'hJe', which isn't a real word or company",
+      "It looks like a 3D model a company would show, not a photo of a real place",
+      "Unusual doesn't mean fake, so always check the small details"
+    ],
+    "credit": "Made with AI by the Second-Look team"
+  },
+  {
+    "id": 6,
+    "image": "images/lion-statue.png",
+    "label": "ai",
+    "clues": [
+      "The writing on the museum tag is gibberish",
+      "The tag says MMXXIV, which is the year 2024, on a statue that's supposed to be ancient",
+      "The moss blends into the stone in a strange, painted-on way"
+    ],
+    "credit": "Made with AI by the Second-Look team"
+  },
+  {
+    "id": 7,
+    "image": "images/otter-edited.png",
+    "label": "ai",
+    "clues": [
+      "The sea urchin shell is very bright and colorful compared to everything else",
+      "This is a real photo with one thing changed: the baby otter was swapped out",
+      "Fakes like this are the hardest to catch, because most of the picture is real"
+    ],
+    "credit": "Based on a photo by Michael L. Baird, CC BY 2.0. Edited with AI by the Second-Look team"
+  },
+  {
+    "id": 8,
+    "image": "images/otter-pup.jpg",
+    "label": "real",
+    "clues": [
+      "Only the tips of the fur get wet, so it sticks up in little spikes",
+      "The baby's fur is fluffier than the mom's, which is true for real otter pups",
+      "The ripples and reflections in the water match the otters"
+    ],
+    "credit": "Photo by Michael L. Baird, CC BY 2.0, via Wikimedia Commons (resized)"
+  },
+  {
+    "id": 9,
+    "image": "images/transamerica.jpg",
+    "label": "real",
+    "clues": [
+      "The rows of windows line up and repeat the way real buildings do",
+      "The streets, roofs, and nearby buildings all make sense together",
+      "It's a famous building in San Francisco that you can look up"
+    ],
+    "credit": "Photo by Daniel Schwen, CC BY-SA 2.5, via Wikimedia Commons (resized)"
+  },
+  {
+    "id": 10,
+    "image": "images/tetons.jpg",
+    "label": "real",
+    "clues": [
+      "The bright river matches where the sun breaks through the clouds",
+      "Every tree along the river is a slightly different shape and size, like a real forest",
+      "Looking amazing doesn't mean fake: photographers wait hours for light like this"
+    ],
+    "credit": "Ansel Adams, 1942. National Archives, Public Domain, via Wikimedia Commons"
   }
 ]
