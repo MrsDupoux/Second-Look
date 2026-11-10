@@ -1,6 +1,7 @@
-// Second Look — Phase 1 game logic (no AI).
+// Second Look — game logic.
 // The correct answer always comes from data/samples.json.
-// Everything here lives in memory only; nothing is saved or sent anywhere.
+// Everything here lives in memory only; nothing is saved. The group's reason is sent
+// only to our own server's /api/explain, which does not store or log it.
 
 const SESSION_LENGTH = 10;
 
@@ -72,10 +73,45 @@ function showImage() {
   show("screen-image");
 }
 
+// Ask the server's AI helper. Sends only sampleId, guess and reason (never the label).
+// If anything fails, the box is hidden and the reveal shows only the pre-written clues.
+let explainRequest = 0;
+
+async function loadExplanation(sampleId, guess, reason) {
+  const requestId = ++explainRequest;
+  const box = $("ai-helper");
+  const text = $("ai-text");
+  text.textContent = "AI helper is thinking…";
+  text.classList.add("loading");
+  box.hidden = false;
+
+  let explanation = null;
+  try {
+    const res = await fetch("/api/explain", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sampleId, guess, reason }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (res.ok) explanation = (await res.json()).explanation;
+  } catch (err) {
+    explanation = null;
+  }
+
+  if (requestId !== explainRequest) return; // the leader already moved on
+  if (typeof explanation === "string" && explanation.trim()) {
+    text.textContent = explanation;
+    text.classList.remove("loading");
+  } else {
+    box.hidden = true;
+  }
+}
+
 function submitGuess(guess) {
   const sample = session[index];
-  // Phase 1: the reason box is not sent anywhere. Phase 2 will pass it to /api/explain.
+  const reason = $("reason").value.trim().slice(0, 200);
   $("reason").value = "";
+  loadExplanation(sample.id, guess, reason);
 
   const correct = guess === sample.label;
   if (correct) score++;
@@ -94,6 +130,8 @@ function submitGuess(guess) {
 }
 
 function next() {
+  explainRequest++; // ignore any explanation still on its way
+  $("ai-helper").hidden = true;
   index++;
   if (index < session.length) showImage();
   else showResults();
