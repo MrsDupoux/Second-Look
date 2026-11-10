@@ -1,0 +1,7 @@
+# Replit reads this file. "Run" starts the Second-Look server.
+run = "npm install && npm start"
+modules = ["nodejs-20"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80
