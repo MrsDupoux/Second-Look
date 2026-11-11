@@ -123,6 +123,8 @@ function submitGuess(guess) {
   answer.className = `answer ${sample.label}`;
   $("verdict").textContent = correct ? "You got it!" : "Tricky one!";
   $("reveal-image").src = sample.image;
+  $("clue-heading").textContent =
+    sample.label === "ai" ? "How you can tell it’s AI" : "How you can tell it’s real";
   fillList($("clue-list"), sample.clues || []);
   $("credit").textContent = sample.credit ? `Image: ${sample.credit}` : "";
   $("btn-next").textContent = index + 1 < session.length ? "Next" : "See results";

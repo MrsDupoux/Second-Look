@@ -71,7 +71,7 @@ textarea {
 .char-count { font-size: 0.9rem; color: #555; margin: 0.2em 0 0.8em; }
 
 .choices { display: flex; gap: 24px; justify-content: center; }
-.btn-choice { font-size: 2rem; min-width: 220px; padding: 0.6em 1em; color: #fff; }
+.btn-choice { font-size: 2rem; flex: 0 1 220px; min-width: 0; padding: 0.6em 1em; color: #fff; }
 .btn-real { background: #2e8b57; }
 .btn-ai { background: #8a3ffc; }
 
