@@ -61,6 +61,30 @@ function getSampleDetails(args, allowedId) {
 }
 
 // ---- Gemini call with tool use ----
+
+// Errors we create ourselves have fixed messages that are safe to log
+// (they never contain the group's reason text or the model's reply).
+function safeError(message, status) {
+  const err = new Error(message);
+  err.safeToLog = true;
+  if (status) err.status = status;
+  return err;
+}
+
+// Google answers these when it is busy or rate-limited; worth one quick retry.
+const RETRYABLE_STATUSES = [429, 500, 503, 504];
+const RETRY_DELAY_MS = 500;
+
+function wait(ms, signal) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal.addEventListener("abort", () => {
+      clearTimeout(timer);
+      reject(safeError("timed out"));
+    }, { once: true });
+  });
+}
+
 async function callGemini(body, apiKey, signal) {
   const res = await fetch(GEMINI_URL, {
     method: "POST",
@@ -68,13 +92,27 @@ async function callGemini(body, apiKey, signal) {
     body: JSON.stringify(body),
     signal,
   });
-  if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
+  if (!res.ok) throw safeError(`HTTP ${res.status}`, res.status);
   return res.json();
 }
 
 async function explainWithAI({ sampleId, guess, reason }, signal) {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("No API key");
+  if (!apiKey) throw safeError("no GEMINI_API_KEY set");
+
+  // At most one retry per explanation, and only while the 8-second limit allows.
+  let retried = false;
+  async function callWithRetry(body) {
+    try {
+      return await callGemini(body, apiKey, signal);
+    } catch (err) {
+      if (retried || signal.aborted || !RETRYABLE_STATUSES.includes(err.status)) throw err;
+      retried = true;
+      console.log(`AI helper: HTTP ${err.status} from Gemini, retrying once`);
+      await wait(RETRY_DELAY_MS, signal);
+      return callGemini(body, apiKey, signal);
+    }
+  }
 
   const systemPrompt = fs.readFileSync(SYSTEM_PROMPT_PATH, "utf8");
   const contents = [
@@ -91,20 +129,20 @@ async function explainWithAI({ sampleId, guess, reason }, signal) {
   let toolSucceeded = false;
 
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-    const data = await callGemini({ ...baseRequest, contents }, apiKey, signal);
+    const data = await callWithRetry({ ...baseRequest, contents });
     const content = data && data.candidates && data.candidates[0] && data.candidates[0].content;
-    if (!content || !Array.isArray(content.parts)) throw new Error("Empty response");
+    if (!content || !Array.isArray(content.parts)) throw safeError("empty response from Gemini");
 
     const calls = content.parts.filter((p) => p.functionCall);
     if (calls.length === 0) {
       // Final answer. Require that the model actually used our data first.
-      if (!toolSucceeded) throw new Error("Model did not use the tool");
+      if (!toolSucceeded) throw safeError("model did not use the tool");
       const text = content.parts
         .filter((p) => typeof p.text === "string" && !p.thought)
         .map((p) => p.text)
         .join("")
         .trim();
-      if (!text || text === MODEL_FALLBACK_TEXT) throw new Error("No explanation");
+      if (!text || text === MODEL_FALLBACK_TEXT) throw safeError("model gave no explanation");
       return text;
     }
 
@@ -119,7 +157,7 @@ async function explainWithAI({ sampleId, guess, reason }, signal) {
     });
     contents.push({ role: "user", parts: responses });
   }
-  throw new Error("Too many tool rounds");
+  throw safeError("too many tool rounds");
 }
 
 app.disable("x-powered-by");
@@ -158,7 +196,12 @@ app.post("/api/explain", express.json({ limit: "4kb" }), async (req, res) => {
     const explanation = await explainWithAI({ sampleId, guess, reason }, controller.signal);
     res.json({ explanation });
   } catch (err) {
-    // Deliberately not logged: errors could carry request content.
+    // Log only a short, fixed description: never the reason text, the model's reply,
+    // or raw error messages (which could carry request or response content).
+    let why = "unexpected error";
+    if (controller.signal.aborted) why = `timed out after ${AI_TIMEOUT_MS / 1000} seconds`;
+    else if (err && err.safeToLog) why = err.message;
+    console.log(`AI helper failed (showing clues only): ${why}`);
     fallback();
   } finally {
     clearTimeout(timer);
