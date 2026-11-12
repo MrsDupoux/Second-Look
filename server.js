@@ -133,6 +133,15 @@ async function explainWithAI({ sample, guess, reason }, signal) {
     systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: "user", parts: [{ text: userMessage }] }],
   });
+
+  // Token counts only (numbers, never content).
+  const usage = (data && data.usageMetadata) || {};
+  const count = (n) => (Number.isFinite(n) ? n : "?");
+  console.log(
+    `AI helper: tokens — input ${count(usage.promptTokenCount)}, ` +
+    `output ${count(usage.candidatesTokenCount)}, total ${count(usage.totalTokenCount)}`
+  );
+
   const content = data && data.candidates && data.candidates[0] && data.candidates[0].content;
   if (!content || !Array.isArray(content.parts)) throw safeError("empty response from Gemini");
 
