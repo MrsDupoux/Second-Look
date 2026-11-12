@@ -1,28 +1,103 @@
-/* Second Look — Phase 1 styles (projector polish comes in Phase 3) */
+/* Second Look — "Fake Detective" theme.
+   Bright, high-contrast colors and large text for a shared projector screen. */
+
+/* Rounded, friendly font, served from our own server (no outside requests).
+   Nunito, SIL Open Font License (see fonts/OFL.txt). */
+@font-face {
+  font-family: "Nunito";
+  src: url("fonts/nunito-latin.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --ink: #14213d;        /* main text and outlines */
+  --paper: #fff3c4;      /* page background */
+  --card: #ffffff;
+  --blue: #1d4ed8;
+  --blue-dark: #1e3a8a;
+  --real: #087443;
+  --real-dark: #05502e;
+  --ai: #6d28d9;
+  --ai-dark: #4c1d95;
+  --pink: #d61f69;
+  --yellow: #ffc400;
+  --muted: #3d4a5c;
+  --font: "Nunito", ui-rounded, "Arial Rounded MT Bold", "Trebuchet MS", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  /* Magnifying-glass icon used as a mask (takes the text color). */
+  --mag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='10' cy='10' r='6.5' fill='none' stroke='black' stroke-width='3'/%3E%3Cpath d='M15 15l6 6' stroke='black' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
+}
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-  font-size: 22px;
-  line-height: 1.4;
-  background: #f6f4ef;
-  color: #1f2430;
+  font-family: var(--font);
+  font-size: clamp(20px, 0.9vw + 14px, 28px);
+  line-height: 1.45;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(20, 33, 61, 0.08) 2px, transparent 2px);
+  background-size: 28px 28px;
 }
 
 main {
-  max-width: 1000px;
+  max-width: 1050px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 24px 16px;
 }
 
-.screen { text-align: center; }
+/* Each screen is a "case file" card. */
+.screen {
+  text-align: center;
+  background: var(--card);
+  border: 4px solid var(--ink);
+  border-radius: 28px;
+  box-shadow: 8px 8px 0 var(--ink);
+  padding: 28px 24px 32px;
+}
 
-h1 { font-size: 3rem; margin: 0.4em 0; }
-h2 { font-size: 1.4rem; margin: 1.2em 0 0.5em; }
+h1 { font-size: 3.2rem; font-weight: 900; margin: 0.2em 0 0.3em; line-height: 1.1; }
+h2 { font-size: 1.45rem; font-weight: 900; margin: 1.2em 0 0.5em; }
 
-.lead { font-size: 1.3rem; }
+/* Small magnifying glass before headings. */
+h2::before {
+  content: "";
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.35em;
+  vertical-align: -0.1em;
+  background: var(--blue);
+  -webkit-mask: var(--mag-icon) center / contain no-repeat;
+  mask: var(--mag-icon) center / contain no-repeat;
+}
+
+.mag {
+  width: 0.95em;
+  height: 0.95em;
+  vertical-align: -0.12em;
+  margin-right: 0.15em;
+  color: var(--ink);
+  transform: rotate(-8deg);
+}
+
+.badge {
+  display: inline-block;
+  margin: 0;
+  padding: 0.25em 1em;
+  border-radius: 999px;
+  background: var(--pink);
+  color: #fff;
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 3px solid var(--ink);
+}
+
+.lead { font-size: 1.3rem; font-weight: 700; }
 
 .tips {
   text-align: left;
@@ -31,70 +106,112 @@ h2 { font-size: 1.4rem; margin: 1.2em 0 0.5em; }
 }
 .tips li { margin-bottom: 0.4em; }
 
+/* ---- Buttons: chunky and friendly ---- */
 .btn {
   font: inherit;
-  font-weight: 700;
-  border: none;
-  border-radius: 14px;
+  font-weight: 900;
+  border: 3px solid var(--ink);
+  border-radius: 18px;
   padding: 0.6em 1.6em;
   cursor: pointer;
+  box-shadow: 0 6px 0 var(--ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
+.btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 0 var(--ink); }
+.btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
 .btn:disabled { opacity: 0.5; cursor: default; }
-.btn:focus-visible { outline: 4px solid #1f2430; outline-offset: 3px; }
+.btn:focus-visible { outline: 5px solid var(--yellow); outline-offset: 4px; }
 
-.btn-primary { background: #2b59c3; color: #fff; font-size: 1.3rem; margin-top: 1em; }
+.btn-primary { background: var(--blue); color: #fff; font-size: 1.3rem; margin-top: 1em; }
 
-.counter { font-size: 1.2rem; font-weight: 700; margin: 0 0 0.5em; }
+/* ---- Progress bar ---- */
+.progress {
+  max-width: 700px;
+  height: 22px;
+  margin: 0 auto 0.6em;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #e8ecf3;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--yellow), #ff7a00, var(--pink));
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.counter { font-size: 1.2rem; font-weight: 900; margin: 0 0 0.5em; }
 
 .sample-image {
   display: block;
   margin: 0 auto;
   max-width: 100%;
   max-height: 55vh;
-  border-radius: 12px;
+  border: 5px solid var(--ink);
+  border-radius: 18px;
   background: #ddd;
+  box-shadow: 6px 6px 0 rgba(20, 33, 61, 0.25);
 }
 .sample-image.small { max-height: 30vh; margin-bottom: 0.5em; }
 
-.reason-label { display: block; margin-top: 1em; font-weight: 700; }
+.reason-label { display: block; margin-top: 1em; font-weight: 900; }
 
 textarea {
   font: inherit;
   width: 100%;
   max-width: 700px;
-  padding: 0.5em;
-  border: 2px solid #999;
-  border-radius: 10px;
+  padding: 0.5em 0.7em;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
   resize: none;
+  background: #fffdf5;
+  color: var(--ink);
 }
+textarea:focus-visible { outline: 5px solid var(--yellow); outline-offset: 2px; }
 
-.char-count { font-size: 0.9rem; color: #555; margin: 0.2em 0 0.8em; }
+.char-count { font-size: 0.9rem; color: var(--muted); margin: 0.2em 0 0.8em; }
 
 .choices { display: flex; gap: 24px; justify-content: center; }
 .btn-choice { font-size: 2rem; flex: 0 1 220px; min-width: 0; padding: 0.6em 1em; color: #fff; }
-.btn-real { background: #2e8b57; }
-.btn-ai { background: #8a3ffc; }
+.btn-real { background: var(--real); }
+.btn-ai { background: var(--ai); }
 
-.answer { font-size: 3rem; font-weight: 800; margin: 0.2em 0; }
-.answer.real { color: #2e8b57; }
-.answer.ai { color: #8a3ffc; }
-.verdict { font-size: 1.6rem; margin: 0 0 0.6em; }
+.answer { font-size: 3rem; font-weight: 900; margin: 0.2em 0; line-height: 1.15; }
+.answer.real { color: var(--real); }
+.answer.ai { color: var(--ai); }
+.verdict { display: inline-block; font-size: 1.7rem; font-weight: 900; margin: 0 0 0.6em; }
 
+/* Clue lists use little magnifying glasses instead of bullets. */
 .clues {
   text-align: left;
   display: inline-block;
   margin: 0 auto;
   max-width: 800px;
+  padding-left: 0;
+  list-style: none;
 }
-.clues li { margin-bottom: 0.4em; }
+.clues li { position: relative; margin-bottom: 0.5em; padding-left: 1.5em; }
+.clues li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  width: 1em;
+  height: 1em;
+  background: var(--pink);
+  -webkit-mask: var(--mag-icon) center / contain no-repeat;
+  mask: var(--mag-icon) center / contain no-repeat;
+}
 
 .ai-helper {
   max-width: 800px;
   margin: 1em auto 0;
-  padding: 0.6em 1em;
-  border: 3px solid #2b59c3;
-  border-radius: 14px;
-  background: #fff;
+  padding: 0.7em 1.1em;
+  border: 3px solid var(--blue);
+  border-radius: 18px;
+  background: #eef3ff;
   text-align: left;
 }
 .btn-ask,
@@ -102,31 +219,80 @@ textarea {
   display: block;
   margin: 1em auto 0;
   background: #fff;
-  border: 3px solid #2b59c3;
-  color: #2b59c3;
+  color: var(--blue-dark);
 }
 .btn-ask[hidden],
 .btn-show-clues[hidden] { display: none; }
-.ai-label { margin: 0; font-size: 0.9rem; font-weight: 700; color: #2b59c3; }
+.ai-label { margin: 0; font-size: 0.9rem; font-weight: 900; color: var(--blue-dark); }
 .ai-text { margin: 0.3em 0 0; }
-.ai-text.loading { color: #555; font-style: italic; }
+.ai-text.loading { color: var(--muted); font-style: italic; }
 
-.credit { font-size: 0.8rem; color: #555; margin-top: 1em; }
+.credit { font-size: 0.8rem; color: var(--muted); margin-top: 1em; }
 
-.score { font-size: 2rem; font-weight: 800; }
+.score { font-size: 2.4rem; font-weight: 900; }
 
 .exit-options { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
-.btn-exit { background: #fff; border: 3px solid #2b59c3; color: #1f2430; }
+.btn-exit { background: #fff; color: var(--ink); }
 .count {
   display: inline-block;
   min-width: 1.8em;
   margin-left: 0.4em;
   padding: 0 0.3em;
   border-radius: 8px;
-  background: #2b59c3;
+  background: var(--blue);
   color: #fff;
 }
 
-.note { font-size: 0.9rem; color: #555; }
-.safety { font-weight: 700; margin-top: 1.5em; }
-.error { color: #b00020; font-weight: 700; }
+.note { font-size: 0.9rem; color: var(--muted); }
+.safety { font-weight: 900; margin-top: 1.5em; }
+.error { color: #b00020; font-weight: 900; }
+
+/* ---- Celebrations ---- */
+.confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 50;
+}
+.confetti-piece {
+  position: absolute;
+  top: -24px;
+  width: 12px;
+  height: 18px;
+  border-radius: 3px;
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+@keyframes confetti-fall {
+  to { transform: translate(var(--drift), 110vh) rotate(var(--spin)); }
+}
+
+.wobble { animation: wobble 0.6s ease-in-out; }
+@keyframes wobble {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-4deg); }
+  40% { transform: rotate(3deg); }
+  60% { transform: rotate(-2deg); }
+  80% { transform: rotate(1deg); }
+}
+
+/* ---- Small screens ---- */
+@media (max-width: 600px) {
+  .screen { padding: 20px 14px 26px; border-radius: 22px; box-shadow: 5px 5px 0 var(--ink); }
+  h1 { font-size: 2.4rem; }
+  .answer { font-size: 2.2rem; }
+  .choices { gap: 14px; }
+}
+
+/* ---- Respect "reduce motion" ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .btn:hover:not(:disabled),
+  .btn:active:not(:disabled) { transform: none; }
+  .confetti { display: none; }
+}

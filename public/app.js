@@ -41,6 +41,52 @@ function fillList(listEl, items) {
   });
 }
 
+// ---- Look and feel only (no game logic) ----
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+function updateProgress(done) {
+  const percent = session.length ? (done / session.length) * 100 : 0;
+  document.querySelectorAll(".progress").forEach((bar) => {
+    bar.setAttribute("aria-valuemax", session.length);
+    bar.setAttribute("aria-valuenow", done);
+    bar.querySelector(".progress-fill").style.width = `${percent}%`;
+  });
+}
+
+const CONFETTI_COLORS = ["#ff3d7f", "#ffc400", "#00b8d9", "#2ecc71", "#7b2ff7", "#ff7a00"];
+
+let confettiTimer = null;
+
+function clearConfetti() {
+  clearTimeout(confettiTimer);
+  $("confetti").innerHTML = "";
+}
+
+function confettiBurst() {
+  clearConfetti();
+  if (reduceMotion.matches) return;
+  const layer = $("confetti");
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    piece.style.setProperty("--drift", `${(Math.random() - 0.5) * 300}px`);
+    piece.style.setProperty("--spin", `${(Math.random() - 0.5) * 1440}deg`);
+    piece.style.animationDelay = `${Math.random() * 0.3}s`;
+    piece.style.animationDuration = `${1.6 + Math.random() * 1.2}s`;
+    layer.appendChild(piece);
+  }
+  confettiTimer = setTimeout(clearConfetti, 3500);
+}
+
+function wobble(el) {
+  clearConfetti();
+  el.classList.remove("wobble");
+  void el.offsetWidth; // restart the animation
+  el.classList.add("wobble");
+}
+
 // ---- Load data ----
 async function loadSamples() {
   try {
@@ -70,6 +116,8 @@ function showImage() {
   $("sample-image").src = sample.image;
   $("reason").value = "";
   $("char-count").textContent = "0";
+  updateProgress(index);
+  clearConfetti();
   show("screen-image");
 }
 
@@ -143,7 +191,10 @@ function submitGuess(guess) {
   fillList($("clue-list"), sample.clues || []);
   $("credit").textContent = sample.credit ? `Image: ${sample.credit}` : "";
   $("btn-next").textContent = index + 1 < session.length ? "Next" : "See results";
+  updateProgress(index + 1);
   show("screen-reveal");
+  if (correct) confettiBurst();
+  else wobble($("verdict"));
 }
 
 function next() {
