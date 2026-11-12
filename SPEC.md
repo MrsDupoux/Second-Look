@@ -100,7 +100,7 @@ SPEC.md
   1. Looks up the sample in `samples.json` by `sampleId`. It never trusts a label sent from the browser.  
   2. Builds a prompt with: the correct label, the clue list, the group's guess, and their reason.  
   3. Calls the AI and returns 2–3 sentences at a 4th–5th grade reading level: what clues the group caught, which one they missed.  
-- **If the AI call fails or times out (8 seconds):** show only the pre-written clues. The game never breaks.  
+- **If the AI call fails or times out (15 seconds):** show only the pre-written clues. The game never breaks.  
 - The system prompt lives in its own file so it's easy to edit (due with the Day 4 milestone).  
 - Day 3 (Nov 7\) covers LangChain agents. Check whether the AI call is expected to use LangChain before building this part.
 

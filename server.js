@@ -21,7 +21,7 @@ const SYSTEM_PROMPT_PATH = path.join(__dirname, "system.md");
 // Flash-Lite: faster and less busy than Flash; its default thinking level is already "minimal".
 const GEMINI_MODEL = "gemini-3.5-flash-lite";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-const AI_TIMEOUT_MS = 8000;
+const AI_TIMEOUT_MS = 15000;
 const MAX_REASON_LENGTH = 200;
 const MAX_TOOL_ROUNDS = 3;
 // system.md tells the model to reply with this if the tool fails; treat it as a fallback.
@@ -111,7 +111,7 @@ async function explainWithAI({ sampleId, guess, reason }, signal) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw safeError("no GEMINI_API_KEY set");
 
-  // At most one retry per explanation, and only while the 8-second limit allows.
+  // At most one retry per explanation, and only while the 15-second limit allows.
   let retried = false;
   async function callWithRetry(body) {
     try {

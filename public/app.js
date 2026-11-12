@@ -91,7 +91,7 @@ async function loadExplanation(sampleId, guess, reason) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sampleId, guess, reason }),
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(17000), // a bit longer than the server's 15-second limit
     });
     if (res.ok) explanation = (await res.json()).explanation;
   } catch (err) {
