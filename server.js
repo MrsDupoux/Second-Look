@@ -19,7 +19,7 @@ const SAMPLES_PATH = path.join(__dirname, "data", "samples.json");
 const SYSTEM_PROMPT_PATH = path.join(__dirname, "system.md");
 
 // Flash-Lite: faster and less busy than Flash; its default thinking level is already "minimal".
-const GEMINI_MODEL = "gemini-3.5-flash-lite";
+const GEMINI_MODEL = "gemini-3.1-flash-lite";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const AI_TIMEOUT_MS = 15000;
 const MAX_REASON_LENGTH = 200;
