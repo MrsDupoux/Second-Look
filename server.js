@@ -18,7 +18,8 @@ const PORT = process.env.PORT || 3000;
 const SAMPLES_PATH = path.join(__dirname, "data", "samples.json");
 const SYSTEM_PROMPT_PATH = path.join(__dirname, "system.md");
 
-const GEMINI_MODEL = "gemini-3.6-flash";
+// Flash-Lite: faster and less busy than Flash; its default thinking level is already "minimal".
+const GEMINI_MODEL = "gemini-3.5-flash-lite";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const AI_TIMEOUT_MS = 8000;
 const MAX_REASON_LENGTH = 200;
@@ -86,14 +87,24 @@ function wait(ms, signal) {
 }
 
 async function callGemini(body, apiKey, signal) {
+  // Timing log (step name + seconds only, never content) to see which call is slow.
+  const step = body.contents.length === 1 ? "step 1, look up answer" : "step 2, write explanation";
+  const started = Date.now();
+  const seconds = () => ((Date.now() - started) / 1000).toFixed(1);
+  console.log(`AI helper: asking Gemini (${step})...`);
   const res = await fetch(GEMINI_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
     body: JSON.stringify(body),
     signal,
   });
-  if (!res.ok) throw safeError(`HTTP ${res.status}`, res.status);
-  return res.json();
+  if (!res.ok) {
+    console.log(`AI helper: Gemini answered HTTP ${res.status} after ${seconds()}s (${step})`);
+    throw safeError(`HTTP ${res.status}`, res.status);
+  }
+  const data = await res.json();
+  console.log(`AI helper: Gemini answered after ${seconds()}s (${step})`);
+  return data;
 }
 
 async function explainWithAI({ sampleId, guess, reason }, signal) {
