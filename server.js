@@ -75,6 +75,9 @@ function safeError(message, status) {
 // Google answers these when it is busy or rate-limited; worth one quick retry.
 const RETRYABLE_STATUSES = [429, 500, 503, 504];
 const RETRY_DELAY_MS = 500;
+// Most steps answer in 1-3 seconds; a step still waiting after this is likely stuck,
+// so send it again once (a fresh request usually comes back quickly).
+const STEP_TIMEOUT_MS = 5000;
 
 function wait(ms, signal) {
   return new Promise((resolve, reject) => {
@@ -111,17 +114,29 @@ async function explainWithAI({ sampleId, guess, reason }, signal) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw safeError("no GEMINI_API_KEY set");
 
-  // At most one retry per explanation, and only while the 15-second limit allows.
-  let retried = false;
+  // Each step gets at most one retry: if Gemini says it's busy, or if the step is
+  // still waiting after 5 seconds. The overall 15-second limit always applies.
   async function callWithRetry(body) {
+    const firstTry = new AbortController();
+    const stopFirstTry = () => firstTry.abort();
+    signal.addEventListener("abort", stopFirstTry, { once: true });
+    const stepTimer = setTimeout(stopFirstTry, STEP_TIMEOUT_MS);
     try {
-      return await callGemini(body, apiKey, signal);
+      return await callGemini(body, apiKey, firstTry.signal);
     } catch (err) {
-      if (retried || signal.aborted || !RETRYABLE_STATUSES.includes(err.status)) throw err;
-      retried = true;
-      console.log(`AI helper: HTTP ${err.status} from Gemini, retrying once`);
-      await wait(RETRY_DELAY_MS, signal);
+      if (signal.aborted) throw err; // out of time overall
+      const stuck = firstTry.signal.aborted;
+      if (!stuck && !RETRYABLE_STATUSES.includes(err.status)) throw err;
+      if (stuck) {
+        console.log(`AI helper: no answer after ${STEP_TIMEOUT_MS / 1000}s, sending this step again`);
+      } else {
+        console.log(`AI helper: HTTP ${err.status} from Gemini, retrying once`);
+        await wait(RETRY_DELAY_MS, signal);
+      }
       return callGemini(body, apiKey, signal);
+    } finally {
+      clearTimeout(stepTimer);
+      signal.removeEventListener("abort", stopFirstTry);
     }
   }
 
