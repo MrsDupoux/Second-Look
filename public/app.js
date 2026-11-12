@@ -73,9 +73,12 @@ function showImage() {
   show("screen-image");
 }
 
-// Ask the server's AI helper. Sends only sampleId, guess and reason (never the label).
-// If anything fails, the box is hidden and the reveal shows only the pre-written clues.
+// Ask the server's AI helper, only when the leader clicks "Ask the AI helper".
+// Sends only sampleId, guess and reason (never the label).
+// If anything fails, the box shows a short "taking a break" message and the clues stay visible.
+const AI_BREAK_MESSAGE = "The AI helper is taking a break. Use the clues below!";
 let explainRequest = 0;
+let currentAsk = null; // { sampleId, guess, reason } for the picture on the reveal screen (memory only)
 
 async function loadExplanation(sampleId, guess, reason) {
   const requestId = ++explainRequest;
@@ -84,6 +87,7 @@ async function loadExplanation(sampleId, guess, reason) {
   text.textContent = "AI helper is thinking…";
   text.classList.add("loading");
   box.hidden = false;
+  $("btn-ask").hidden = true;
 
   let explanation = null;
   try {
@@ -99,19 +103,30 @@ async function loadExplanation(sampleId, guess, reason) {
   }
 
   if (requestId !== explainRequest) return; // the leader already moved on
+  text.classList.remove("loading");
   if (typeof explanation === "string" && explanation.trim()) {
     text.textContent = explanation;
-    text.classList.remove("loading");
   } else {
-    box.hidden = true;
+    text.textContent = AI_BREAK_MESSAGE;
+    showClues(); // the AI failed, so show the clues right away
   }
+}
+
+function showClues() {
+  $("clues-section").hidden = false;
+  $("btn-show-clues").hidden = true;
 }
 
 function submitGuess(guess) {
   const sample = session[index];
   const reason = $("reason").value.trim().slice(0, 200);
   $("reason").value = "";
-  loadExplanation(sample.id, guess, reason);
+  currentAsk = { sampleId: sample.id, guess, reason };
+  explainRequest++; // ignore any explanation still on its way
+  $("ai-helper").hidden = true;
+  $("btn-ask").hidden = false;
+  $("clues-section").hidden = true;
+  $("btn-show-clues").hidden = false;
 
   const correct = guess === sample.label;
   if (correct) score++;
@@ -133,6 +148,7 @@ function submitGuess(guess) {
 
 function next() {
   explainRequest++; // ignore any explanation still on its way
+  currentAsk = null;
   $("ai-helper").hidden = true;
   index++;
   if (index < session.length) showImage();
@@ -171,6 +187,10 @@ function updateExitCounts() {
 // ---- Wire up ----
 $("btn-start").addEventListener("click", startSession);
 $("btn-next").addEventListener("click", next);
+$("btn-ask").addEventListener("click", () => {
+  if (currentAsk) loadExplanation(currentAsk.sampleId, currentAsk.guess, currentAsk.reason);
+});
+$("btn-show-clues").addEventListener("click", showClues);
 $("btn-again").addEventListener("click", () => show("screen-start"));
 
 document.querySelectorAll(".btn-choice").forEach((btn) => {

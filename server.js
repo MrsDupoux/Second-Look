@@ -23,8 +23,7 @@ const GEMINI_MODEL = "gemini-3.1-flash-lite";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const AI_TIMEOUT_MS = 15000;
 const MAX_REASON_LENGTH = 200;
-const MAX_TOOL_ROUNDS = 3;
-// system.md tells the model to reply with this if the tool fails; treat it as a fallback.
+// system.md tells the model to reply with this if ANSWER or CLUES are missing; treat it as a fallback.
 const MODEL_FALLBACK_TEXT = "Let's look at the clues together!";
 
 function loadSamples() {
@@ -35,33 +34,7 @@ function findSample(id) {
   return loadSamples().find((s) => s.id === id);
 }
 
-// ---- Tool: get_sample_details (defined in tools.md) ----
-const GET_SAMPLE_DETAILS_DECLARATION = {
-  name: "get_sample_details",
-  description:
-    "Look up the correct answer (real or ai) and the clue list for one picture in the Second-Look game. Always call this before explaining an answer. The answer it returns is final.",
-  parameters: {
-    type: "OBJECT",
-    properties: {
-      sampleId: {
-        type: "INTEGER",
-        description: "The id of the picture the group just answered, from 1 to 10.",
-      },
-    },
-    required: ["sampleId"],
-  },
-};
-
-// Read-only lookup in data/samples.json. Only answers for the picture this request is about.
-function getSampleDetails(args, allowedId) {
-  const id = Number(args && args.sampleId);
-  if (id !== allowedId) return { error: "Sample not found" };
-  const sample = findSample(id);
-  if (!sample) return { error: "Sample not found" };
-  return { answer: sample.label, clues: sample.clues || [] };
-}
-
-// ---- Gemini call with tool use ----
+// ---- Gemini call ----
 
 // Errors we create ourselves have fixed messages that are safe to log
 // (they never contain the group's reason text or the model's reply).
@@ -72,12 +45,15 @@ function safeError(message, status) {
   return err;
 }
 
-// Google answers these when it is busy or rate-limited; worth one quick retry.
+// Google answers these when it is busy or rate-limited; worth a quick retry.
 const RETRYABLE_STATUSES = [429, 500, 503, 504];
 const RETRY_DELAY_MS = 500;
-// Most steps answer in 1-3 seconds; a step still waiting after this is likely stuck,
-// so send it again once (a fresh request usually comes back quickly).
-const STEP_TIMEOUT_MS = 5000;
+// Most requests answer in 1-3 seconds; one still waiting after this is likely stuck,
+// so send it again (a fresh request usually comes back quickly).
+const STEP_TIMEOUT_MS = 4000;
+// Tries: the first try plus up to 2 resends. The last try gets whatever
+// time is left of the overall limit instead of the 4-second cutoff.
+const MAX_TRIES = 3;
 
 function wait(ms, signal) {
   return new Promise((resolve, reject) => {
@@ -90,11 +66,10 @@ function wait(ms, signal) {
 }
 
 async function callGemini(body, apiKey, signal) {
-  // Timing log (step name + seconds only, never content) to see which call is slow.
-  const step = body.contents.length === 1 ? "step 1, look up answer" : "step 2, write explanation";
+  // Timing log (status and seconds only, never content).
   const started = Date.now();
   const seconds = () => ((Date.now() - started) / 1000).toFixed(1);
-  console.log(`AI helper: asking Gemini (${step})...`);
+  console.log("AI helper: asking Gemini...");
   const res = await fetch(GEMINI_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
@@ -102,88 +77,72 @@ async function callGemini(body, apiKey, signal) {
     signal,
   });
   if (!res.ok) {
-    console.log(`AI helper: Gemini answered HTTP ${res.status} after ${seconds()}s (${step})`);
+    console.log(`AI helper: Gemini answered HTTP ${res.status} after ${seconds()}s`);
     throw safeError(`HTTP ${res.status}`, res.status);
   }
   const data = await res.json();
-  console.log(`AI helper: Gemini answered after ${seconds()}s (${step})`);
+  console.log(`AI helper: Gemini answered after ${seconds()}s`);
   return data;
 }
 
-async function explainWithAI({ sampleId, guess, reason }, signal) {
+// One request: the server looks up the answer and clues in samples.json itself and
+// sends them to Gemini, so the AI never decides real vs. AI.
+async function explainWithAI({ sample, guess, reason }, signal) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw safeError("no GEMINI_API_KEY set");
 
-  // Each step gets at most one retry: if Gemini says it's busy, or if the step is
-  // still waiting after 5 seconds. The overall 15-second limit always applies.
+  // Up to 3 tries: the request is sent again if Gemini says it's busy, or if
+  // it is still waiting after 4 seconds. The overall 15-second limit always applies.
   async function callWithRetry(body) {
-    const firstTry = new AbortController();
-    const stopFirstTry = () => firstTry.abort();
-    signal.addEventListener("abort", stopFirstTry, { once: true });
-    const stepTimer = setTimeout(stopFirstTry, STEP_TIMEOUT_MS);
-    try {
-      return await callGemini(body, apiKey, firstTry.signal);
-    } catch (err) {
-      if (signal.aborted) throw err; // out of time overall
-      const stuck = firstTry.signal.aborted;
-      if (!stuck && !RETRYABLE_STATUSES.includes(err.status)) throw err;
-      if (stuck) {
-        console.log(`AI helper: no answer after ${STEP_TIMEOUT_MS / 1000}s, sending this step again`);
-      } else {
-        console.log(`AI helper: HTTP ${err.status} from Gemini, retrying once`);
-        await wait(RETRY_DELAY_MS, signal);
+    for (let tryNumber = 1; ; tryNumber++) {
+      const lastTry = tryNumber === MAX_TRIES;
+      if (lastTry) return callGemini(body, apiKey, signal);
+
+      const thisTry = new AbortController();
+      const stopThisTry = () => thisTry.abort();
+      signal.addEventListener("abort", stopThisTry, { once: true });
+      const stepTimer = setTimeout(stopThisTry, STEP_TIMEOUT_MS);
+      try {
+        return await callGemini(body, apiKey, thisTry.signal);
+      } catch (err) {
+        if (signal.aborted) throw err; // out of time overall
+        const stuck = thisTry.signal.aborted;
+        if (!stuck && !RETRYABLE_STATUSES.includes(err.status)) throw err;
+        if (stuck) {
+          console.log(`AI helper: no answer after ${STEP_TIMEOUT_MS / 1000}s, sending it again`);
+        } else {
+          console.log(`AI helper: HTTP ${err.status} from Gemini, retrying`);
+          await wait(RETRY_DELAY_MS, signal);
+        }
+      } finally {
+        clearTimeout(stepTimer);
+        signal.removeEventListener("abort", stopThisTry);
       }
-      return callGemini(body, apiKey, signal);
-    } finally {
-      clearTimeout(stepTimer);
-      signal.removeEventListener("abort", stopFirstTry);
     }
   }
 
   const systemPrompt = fs.readFileSync(SYSTEM_PROMPT_PATH, "utf8");
-  const contents = [
-    {
-      role: "user",
-      parts: [{ text: `SAMPLE_ID: ${sampleId}\nGUESS: ${guess}\nREASON: ${reason}` }],
-    },
-  ];
-  const baseRequest = {
+  const clues = (sample.clues || []).map((c) => `- ${c}`).join("\n");
+  const userMessage =
+    `ANSWER: ${sample.label}\n` +
+    `CLUES:\n${clues}\n` +
+    `GUESS: ${guess}\n` +
+    `REASON: ${reason}`;
+
+  const data = await callWithRetry({
     systemInstruction: { parts: [{ text: systemPrompt }] },
-    tools: [{ functionDeclarations: [GET_SAMPLE_DETAILS_DECLARATION] }],
-  };
+    contents: [{ role: "user", parts: [{ text: userMessage }] }],
+  });
+  const content = data && data.candidates && data.candidates[0] && data.candidates[0].content;
+  if (!content || !Array.isArray(content.parts)) throw safeError("empty response from Gemini");
 
-  let toolSucceeded = false;
-
-  for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-    const data = await callWithRetry({ ...baseRequest, contents });
-    const content = data && data.candidates && data.candidates[0] && data.candidates[0].content;
-    if (!content || !Array.isArray(content.parts)) throw safeError("empty response from Gemini");
-
-    const calls = content.parts.filter((p) => p.functionCall);
-    if (calls.length === 0) {
-      // Final answer. Require that the model actually used our data first.
-      if (!toolSucceeded) throw safeError("model did not use the tool");
-      const text = content.parts
-        .filter((p) => typeof p.text === "string" && !p.thought)
-        .map((p) => p.text)
-        .join("")
-        .trim();
-      if (!text || text === MODEL_FALLBACK_TEXT) throw safeError("model gave no explanation");
-      return text;
-    }
-
-    // Send the model's turn back unchanged (keeps Gemini 3 thought signatures), then the tool results.
-    contents.push(content);
-    const responses = calls.map((p) => {
-      const { name, args } = p.functionCall;
-      const result =
-        name === "get_sample_details" ? getSampleDetails(args, sampleId) : { error: "Unknown tool" };
-      if (!result.error) toolSucceeded = true;
-      return { functionResponse: { name, response: result } };
-    });
-    contents.push({ role: "user", parts: responses });
-  }
-  throw safeError("too many tool rounds");
+  const text = content.parts
+    .filter((p) => typeof p.text === "string" && !p.thought)
+    .map((p) => p.text)
+    .join("")
+    .trim();
+  if (!text || text === MODEL_FALLBACK_TEXT) throw safeError("model gave no explanation");
+  return text;
 }
 
 app.disable("x-powered-by");
@@ -219,7 +178,7 @@ app.post("/api/explain", express.json({ limit: "4kb" }), async (req, res) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
   try {
-    const explanation = await explainWithAI({ sampleId, guess, reason }, controller.signal);
+    const explanation = await explainWithAI({ sample, guess, reason }, controller.signal);
     res.json({ explanation });
   } catch (err) {
     // Log only a short, fixed description: never the reason text, the model's reply,

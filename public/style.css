@@ -97,6 +97,16 @@ textarea {
   background: #fff;
   text-align: left;
 }
+.btn-ask,
+.btn-show-clues {
+  display: block;
+  margin: 1em auto 0;
+  background: #fff;
+  border: 3px solid #2b59c3;
+  color: #2b59c3;
+}
+.btn-ask[hidden],
+.btn-show-clues[hidden] { display: none; }
 .ai-label { margin: 0; font-size: 0.9rem; font-weight: 700; color: #2b59c3; }
 .ai-text { margin: 0.3em 0 0; }
 .ai-text.loading { color: #555; font-style: italic; }
